@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart QR Attendance System</title>
 
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e3a8a">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Icons -->
@@ -500,7 +505,7 @@
     <div id="view-login" class="auth-wrapper">
         <div class="login-card">
             <div style="margin-bottom: 2rem;">
-                <i class="fa-solid fa-qrcode" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                <img src="icon.png" alt="Smart Attendance Logo" style="width: 100px; height: 100px; border-radius: 12px; margin-bottom: 1rem; object-fit: contain;">
                 <h2>Smart Attendance</h2>
                 <p>Welcome back! Please login.</p>
             </div>
@@ -630,10 +635,9 @@
                                 <div class="form-group">
                                     <label>Subject / Class</label>
                                     <select id="qr-subject" required>
-                                        <option value="Computer Science 101">Computer Science 101</option>
-                                        <option value="Advanced Mathematics">Advanced Mathematics</option>
-                                        <option value="Physics II">Physics II</option>
-                                        <option value="Web Development">Web Development</option>
+                                        <option value="Software Testing">Software Testing</option>
+                                        <option value="Cyber security">Cyber security</option>
+                                        <option value="DBA lab">DBA lab</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -671,10 +675,9 @@
                                 <input type="date" id="filter-date" onchange="renderAttendanceTable()">
                                 <select id="filter-subject" onchange="renderAttendanceTable()">
                                     <option value="All">All Subjects</option>
-                                    <option value="Computer Science 101">Computer Science 101</option>
-                                    <option value="Advanced Mathematics">Advanced Mathematics</option>
-                                    <option value="Physics II">Physics II</option>
-                                    <option value="Web Development">Web Development</option>
+                                    <option value="Software Testing">Software Testing</option>
+                                    <option value="Cyber security">Cyber security</option>
+                                    <option value="DBA lab">DBA lab</option>
                                 </select>
                             </div>
                         </div>
@@ -1397,6 +1400,16 @@
         // Run auth check on load
         window.onload = checkAuth;
 
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
     </script>
 </body>
 
