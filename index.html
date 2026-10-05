@@ -447,6 +447,10 @@
         }
 
         @media (max-width: 768px) {
+            .hide-on-mobile {
+                display: none !important;
+            }
+
             .sidebar {
                 position: fixed;
                 left: -260px;
@@ -563,7 +567,12 @@
                             class="fa-solid fa-bars"></i></button>
                     <h2 id="admin-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
                 </div>
-                <div style="font-weight: 500;">Welcome, Admin</div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-weight: 500;" class="hide-on-mobile">Welcome, Admin</div>
+                    <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-size: 1.25rem; cursor:pointer;" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
             </header>
 
             <div class="content-area">
@@ -815,7 +824,12 @@
                             class="fa-solid fa-bars"></i></button>
                     <h2 id="student-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
                 </div>
-                <div id="student-welcome" style="font-weight: 500;">Welcome, Student</div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="student-welcome" style="font-weight: 500;" class="hide-on-mobile">Welcome, Student</div>
+                    <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-size: 1.25rem; cursor:pointer;" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
             </header>
 
             <div class="content-area">
