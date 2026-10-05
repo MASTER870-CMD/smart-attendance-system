@@ -415,6 +415,27 @@
             background-color: var(--danger);
         }
 
+        /* Loading Spinner */
+        #global-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255,255,255,0.7);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .spinner {
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         /* Mobile Hamburger */
         .mobile-toggle {
             display: none;
@@ -463,6 +484,11 @@
 </head>
 
 <body>
+
+    <div id="global-loader" class="hidden">
+        <div class="spinner"></div>
+        <div style="margin-top:1rem; font-weight:600; color:var(--primary);">Processing...</div>
+    </div>
 
     <div id="toast-container"></div>
 
@@ -868,19 +894,38 @@
         let DB = { students: [], sessions: [], attendance: [] };
         let adminPoll = null, activeSessionId = null;
 
-        const api = async (action, data = {}) => {
+        const api = async (action, data = {}, showLoading = true) => {
             if (API_URL.startsWith('PASTE')) { showToast('Set API_URL in this file first', 'error'); return null; }
             const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+            const loader = document.getElementById('global-loader');
+            if (loader && showLoading) loader.classList.remove('hidden');
             try {
                 const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, ...auth, ...data }) });
                 const j = await r.json();
+                if (loader && showLoading) loader.classList.add('hidden');
                 if (!j.ok) { showToast(j.error || 'Error', 'error'); return null; }
                 return j;
-            } catch (e) { showToast('Cannot reach Google Sheet. Check API_URL / deployment.', 'error'); return null; }
+            } catch (e) { 
+                if (loader && showLoading) loader.classList.add('hidden');
+                showToast('Cannot reach Google Sheet. Check API_URL / deployment.', 'error'); 
+                return null; 
+            }
         };
         const refresh = async () => {
-            const j = await api('getAll');
+            const j = await api('getAll', {}, false);
             if (!j) return false;
+            
+            // Normalize old date strings using timestamps to ensure UI consistency
+            j.sessions.forEach(s => {
+                if(s.startedAt) s.date = formatDate(new Date(Number(s.startedAt)));
+            });
+            j.attendance.forEach(a => {
+                if(a.timestamp) {
+                    a.date = formatDate(new Date(Number(a.timestamp)));
+                    a.time = formatTime(new Date(Number(a.timestamp)));
+                }
+            });
+
             DB = { students: j.students, sessions: j.sessions, attendance: j.attendance };
             return true;
         };
