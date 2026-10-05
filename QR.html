@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart QR Attendance System</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- External Libraries for QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            /* Dark Blue */
+            --primary-light: #3b82f6;
+            --secondary: #475569;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            overflow: hidden;
+            /* Prevent body scroll, handle in layout */
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Auth View */
+        .auth-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+
+        .login-card {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* Forms & Inputs */
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--background);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            flex: 1;
+            padding: 1.5rem 0;
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 1rem;
+            border-radius: var(--radius);
+            color: var(--secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background-color: var(--background);
+        }
+
+        .topbar {
+            background: var(--surface);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .content-area {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Cards & Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-light);
+        }
+
+        .icon-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .icon-red {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .icon-orange {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .stat-info p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Panels/Containers */
+        .panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--background);
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* QR Specifics */
+        #qrcode-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--radius);
+        }
+
+        .timer-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--danger);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Toasts */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 250px;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-success {
+            background-color: var(--success);
+        }
+
+        .toast-error {
+            background-color: var(--danger);
+        }
+
+        /* Mobile Hamburger */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                z-index: 50;
+                height: 100vh;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
+            .topbar {
+                padding: 1rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- LOGIN VIEW -->
+    <div id="view-login" class="auth-wrapper">
+        <div class="login-card">
+            <div style="margin-bottom: 2rem;">
+                <i class="fa-solid fa-qrcode" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                <h2>Smart Attendance</h2>
+                <p>Welcome back! Please login.</p>
+            </div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="login-role" required>
+                        <option value="student">Student</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Username / Student ID</label>
+                    <input type="text" id="login-username" placeholder="e.g., admin or S101" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn">Login Securely</button>
+                <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+                    Mock Credentials:<br>
+                    Admin: admin / admin<br>
+                    Student: student / student
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" class="app-container hidden">
+        <aside class="sidebar" id="admin-sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-qrcode"></i> Smart QR
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-section="admin-dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </li>
+                <li class="nav-item" data-section="admin-generate-qr">
+                    <i class="fa-solid fa-qrcode"></i> Generate QR
+                </li>
+                <li class="nav-item" data-section="admin-records">
+                    <i class="fa-solid fa-clipboard-list"></i> Attendance Logs
+                </li>
+                <li class="nav-item" data-section="admin-students">
+                    <i class="fa-solid fa-users"></i> Students
+                </li>
+                <li class="nav-item" data-section="admin-reports">
+                    <i class="fa-solid fa-file-export"></i> Reports
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="btn btn-outline" onclick="logout()"><i class="fa-solid fa-sign-out-alt"></i>
+                    Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="mobile-toggle" onclick="toggleSidebar('admin-sidebar')"><i
+                            class="fa-solid fa-bars"></i></button>
+                    <h2 id="admin-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
+                </div>
+                <div style="font-weight: 500;">Welcome, Admin</div>
+            </header>
+
+            <div class="content-area">
+                <!-- Admin Dashboard Section -->
+                <section id="sec-admin-dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-total-students">0</h3>
+                                <p>Total Students</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-green"><i class="fa-solid fa-user-check"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-present-today">0</h3>
+                                <p>Present Today</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-red"><i class="fa-solid fa-user-xmark"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-absent-today">0</h3>
+                                <p>Absent Today</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-orange"><i class="fa-solid fa-percent"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-attendance-percent">0%</h3>
+                                <p>Overall Attendance</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Quick Actions</h3>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn" style="width: auto;"
+                                onclick="switchAdminNav('admin-generate-qr')">Generate Session QR</button>
+                            <button class="btn btn-outline" style="width: auto;"
+                                onclick="switchAdminNav('admin-students')">Manage Students</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Generate QR Section -->
+                <section id="sec-admin-generate-qr" class="hidden">
+                    <div class="panel" style="max-width: 600px; margin: 0 auto;">
+                        <h3 style="text-align: center;">Start Attendance Session</h3>
+
+                        <div id="qr-form-container">
+                            <form id="generate-qr-form">
+                                <div class="form-group">
+                                    <label>Subject / Class</label>
+                                    <select id="qr-subject" required>
+                                        <option value="Computer Science 101">Computer Science 101</option>
+                                        <option value="Advanced Mathematics">Advanced Mathematics</option>
+                                        <option value="Physics II">Physics II</option>
+                                        <option value="Web Development">Web Development</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Duration (Minutes)</label>
+                                    <select id="qr-duration" required>
+                                        <option value="1">1 Minute (Demo)</option>
+                                        <option value="5">5 Minutes</option>
+                                        <option value="10">10 Minutes</option>
+                                        <option value="15">15 Minutes</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn">Generate QR Code</button>
+                            </form>
+                        </div>
+
+                        <div id="qr-display-container" class="hidden" style="text-align: center;">
+                            <div class="timer-display" id="qr-timer">00:00</div>
+                            <p style="margin-bottom: 0;">Scan this QR code to mark your attendance</p>
+                            <div id="qrcode-container"></div>
+                            <h4 id="qr-subject-display" style="color: var(--primary);"></h4>
+                            <p id="qr-live" style="font-weight:600;"></p>
+                            <button class="btn btn-danger" onclick="stopQRSession()" style="margin-top: 1rem;">End
+                                Session Now</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Records Section -->
+                <section id="sec-admin-records" class="hidden">
+                    <div class="panel">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <h3>Attendance Logs</h3>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <input type="date" id="filter-date" onchange="renderAttendanceTable()">
+                                <select id="filter-subject" onchange="renderAttendanceTable()">
+                                    <option value="All">All Subjects</option>
+                                    <option value="Computer Science 101">Computer Science 101</option>
+                                    <option value="Advanced Mathematics">Advanced Mathematics</option>
+                                    <option value="Physics II">Physics II</option>
+                                    <option value="Web Development">Web Development</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Student Management Section -->
+                <section id="sec-admin-students" class="hidden">
+                    <div class="panel">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3>Student Management</h3>
+                            <button class="btn" style="width: auto;" onclick="toggleAddStudentForm()"><i
+                                    class="fa-solid fa-plus"></i> Add Student</button>
+                        </div>
+
+                        <div id="add-student-form-container" class="hidden"
+                            style="background: var(--background); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                            <form id="add-student-form"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group"><label>Student ID</label><input type="text" id="stud-id"
+                                        required></div>
+                                <div class="form-group"><label>Name</label><input type="text" id="stud-name" required>
+                                </div>
+                                <div class="form-group"><label>Email</label><input type="email" id="stud-email"
+                                        required></div>
+                                <div class="form-group"><label>Course</label><input type="text" id="stud-course"
+                                        required></div>
+                                <div class="form-group"><label>Password</label><input type="password" id="stud-password"
+                                        required value="student"></div>
+                                <div class="form-group" style="display: flex; align-items: flex-end; gap: 1rem;">
+                                    <button type="submit" class="btn btn-success">Save</button>
+                                    <button type="button" class="btn btn-outline"
+                                        onclick="toggleAddStudentForm()">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="students-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Course</th>
+                                        <th>Email</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Reports Section -->
+                <section id="sec-admin-reports" class="hidden">
+                    <div class="panel" style="margin-bottom:1.5rem;">
+                        <h3>Student-wise Attendance</h3>
+                        <div class="table-responsive">
+                            <table id="student-report-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Sessions</th>
+                                        <th>Present</th>
+                                        <th>Absent</th>
+                                        <th>%</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="panel" style="margin-bottom:1.5rem;">
+                        <h3>Session-wise Attendance</h3>
+                        <div class="table-responsive">
+                            <table id="session-report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Subject</th>
+                                        <th>Present</th>
+                                        <th>Absent</th>
+                                        <th>Who was absent</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <h3>Export Reports</h3>
+                        <p>Download attendance data for external use.</p>
+                        <button class="btn btn-success" style="width: auto;" onclick="downloadCSV()"><i
+                                class="fa-solid fa-download"></i> Download Full CSV Report</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- STUDENT VIEW -->
+    <div id="view-student" class="app-container hidden">
+        <aside class="sidebar" id="student-sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-qrcode"></i> Student Portal
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-section="student-dashboard">
+                    <i class="fa-solid fa-home"></i> My Dashboard
+                </li>
+                <li class="nav-item" data-section="student-scan">
+                    <i class="fa-solid fa-camera"></i> Scan QR
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="btn btn-outline" onclick="logout()"><i class="fa-solid fa-sign-out-alt"></i>
+                    Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="mobile-toggle" onclick="toggleSidebar('student-sidebar')"><i
+                            class="fa-solid fa-bars"></i></button>
+                    <h2 id="student-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
+                </div>
+                <div id="student-welcome" style="font-weight: 500;">Welcome, Student</div>
+            </header>
+
+            <div class="content-area">
+                <!-- Student Dashboard Section -->
+                <section id="sec-student-dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon icon-blue"><i class="fa-solid fa-clipboard-check"></i></div>
+                            <div class="stat-info">
+                                <h3 id="student-total-attended">0</h3>
+                                <p>Classes Attended</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--danger);"><i
+                                    class="fa-solid fa-user-xmark"></i></div>
+                            <div class="stat-info">
+                                <h3 id="student-total-absent">0</h3>
+                                <p>Classes Missed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3>Recent Attendance</h3>
+                            <button class="btn" style="width: auto;" onclick="switchStudentNav('student-scan')"><i
+                                    class="fa-solid fa-qrcode"></i> Scan Now</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="student-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Student Scan QR Section -->
+                <section id="sec-student-scan" class="hidden">
+                    <div class="panel" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                        <h3>Scan Attendance QR Code</h3>
+                        <p>Allow camera access to scan the code displayed by your instructor.</p>
+
+                        <div id="reader" style="width: 100%; min-height: 300px; margin-bottom: 1.5rem;"></div>
+
+                        <div id="scan-result" class="hidden">
+                            <div class="stat-icon icon-green" style="margin: 0 auto 1rem auto;"><i
+                                    class="fa-solid fa-check"></i></div>
+                            <h4 style="color: var(--success); margin-bottom: 0.5rem;">Attendance Marked Successfully!
+                            </h4>
+                            <p id="scan-details"></p>
+                            <button class="btn" onclick="resetScanner()">Scan Another</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* === MOCK DATA SETUP & INITIALIZATION === */
+
+        const API_URL = 'https://script.google.com/macros/s/AKfycby4q9ITxgkEfF3DiyhRk2as2SiEh1ubOIPabAnIi0GgjmC_Zae9NJMvPcsJrZPuvsif/exec'; // Google Apps Script Web App URL
+        let DB = { students: [], sessions: [], attendance: [] };
+        let adminPoll = null, activeSessionId = null;
+
+        const api = async (action, data = {}) => {
+            if (API_URL.startsWith('PASTE')) { showToast('Set API_URL in this file first', 'error'); return null; }
+            const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+            try {
+                const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, ...auth, ...data }) });
+                const j = await r.json();
+                if (!j.ok) { showToast(j.error || 'Error', 'error'); return null; }
+                return j;
+            } catch (e) { showToast('Cannot reach Google Sheet. Check API_URL / deployment.', 'error'); return null; }
+        };
+        const refresh = async () => {
+            const j = await api('getAll');
+            if (!j) return false;
+            DB = { students: j.students, sessions: j.sessions, attendance: j.attendance };
+            return true;
+        };
+        const isEnded = s => s.status === 'ended' || Date.now() > Number(s.expiresAt);
+
+        /* === UTILITY FUNCTIONS === */
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        const toggleSidebar = (sidebarId) => {
+            document.getElementById(sidebarId).classList.toggle('open');
+        };
+
+        const formatDate = (dateObj) => {
+            return dateObj.toLocaleDateString('en-CA');
+        };
+        const formatTime = (dateObj) => {
+            return dateObj.toTimeString().split(' ')[0].substring(0, 5);
+        };
+
+        /* === AUTHENTICATION LOGIC === */
+
+        let currentUser = null;
+
+        const checkAuth = async () => {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                if (!(await refresh())) { logout(); return; }
+                if (currentUser.role === 'admin') {
+                    showView('view-admin');
+                    initAdmin();
+                } else {
+                    showView('view-student');
+                    initStudent();
+                }
+            } else {
+                showView('view-login');
+            }
+        };
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            localStorage.setItem('auth', JSON.stringify({
+                role: document.getElementById('login-role').value,
+                id: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value
+            }));
+            const j = await api('login');
+            if (!j) { localStorage.removeItem('auth'); return; }
+            currentUser = j.user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showToast('Login successful!');
+            checkAuth();
+        });
+
+        const logout = () => {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('auth');
+            clearInterval(adminPoll);
+            currentUser = null;
+            if (html5QrcodeScanner) {
+                try { html5QrcodeScanner.clear(); } catch (e) { }
+            }
+            if (qrTimerInterval) clearInterval(qrTimerInterval);
+            showView('view-login');
+            showToast('Logged out successfully');
+        };
+
+        const showView = (viewId) => {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('view-student').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        };
+
+        /* === ADMIN FUNCTIONS === */
+
+        const refreshAdminViews = async () => {
+            if (!(await refresh())) return;
+            updateAdminDashboard(); renderAttendanceTable(); renderStudentsTable(); renderReport();
+            const l = document.getElementById('qr-live');
+            if (l && activeSessionId) {
+                const n = DB.attendance.filter(a => a.sessionId === activeSessionId).length;
+                l.innerText = `${n} of ${DB.students.length} students marked present`;
+            }
+        };
+
+        const initAdmin = () => {
+            setupAdminNav();
+            refreshAdminViews();
+            clearInterval(adminPoll);
+            adminPoll = setInterval(refreshAdminViews, 5000);
+        };
+
+        const setupAdminNav = () => {
+            const items = document.querySelectorAll('#admin-sidebar .nav-item');
+            items.forEach(item => {
+                item.addEventListener('click', () => {
+                    const section = item.getAttribute('data-section');
+                    switchAdminNav(section);
+                    document.getElementById('admin-sidebar').classList.remove('open');
+                });
+            });
+        };
+
+        const switchAdminNav = (sectionId) => {
+            // Update Active Class
+            document.querySelectorAll('#admin-sidebar .nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+
+            // Hide all sections
+            document.getElementById('sec-admin-dashboard').classList.add('hidden');
+            document.getElementById('sec-admin-generate-qr').classList.add('hidden');
+            document.getElementById('sec-admin-records').classList.add('hidden');
+            document.getElementById('sec-admin-students').classList.add('hidden');
+            document.getElementById('sec-admin-reports').classList.add('hidden');
+
+            // Show target
+            document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
+
+            // Set Title
+            const titles = {
+                'admin-dashboard': 'Dashboard',
+                'admin-generate-qr': 'Generate QR Code',
+                'admin-records': 'Attendance Logs',
+                'admin-students': 'Manage Students',
+                'admin-reports': 'Reports'
+            };
+            document.getElementById('admin-page-title').innerText = titles[sectionId];
+        };
+
+        const updateAdminDashboard = () => {
+            const students = DB.students;
+            const attendance = DB.attendance;
+            const today = formatDate(new Date());
+
+            const totalStudents = students.length;
+            const presentTodayList = attendance.filter(a => a.date === today && a.status === 'Present');
+
+            // Filter unique students present today
+            const uniquePresent = new Set(presentTodayList.map(a => a.studentId)).size;
+
+            document.getElementById('stat-total-students').innerText = totalStudents;
+            document.getElementById('stat-present-today').innerText = uniquePresent;
+            document.getElementById('stat-absent-today').innerText = DB.sessions.some(x => x.date === today) ? totalStudents - uniquePresent : 0;
+
+            const pct = totalStudents === 0 ? 0 : Math.round((uniquePresent / totalStudents) * 100);
+            document.getElementById('stat-attendance-percent').innerText = `${pct}%`;
+        };
+
+        /* QR Generation */
+        let qrcode = null;
+        let qrTimerInterval = null;
+
+        document.getElementById('generate-qr-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById('qr-subject').value;
+            const durationMinutes = parseInt(document.getElementById('qr-duration').value);
+
+            const j = await api('createSession', { subject, minutes: durationMinutes });
+            if (!j) return;
+            const qrData = j.session;
+            const expiresAt = qrData.expiresAt;
+            activeSessionId = qrData.sessionId;
+
+            // Generate UI
+            document.getElementById('qr-form-container').classList.add('hidden');
+            document.getElementById('qr-display-container').classList.remove('hidden');
+            document.getElementById('qr-subject-display').innerText = `Subject: ${subject}`;
+
+            const qrContainer = document.getElementById('qrcode-container');
+            qrContainer.innerHTML = '';
+            qrcode = new QRCode(qrContainer, {
+                text: JSON.stringify(qrData),
+                width: 256,
+                height: 256,
+                colorDark: "#1e3a8a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            startQRTimer(expiresAt);
+            showToast('QR Code Generated Successfully!');
+        });
+
+        const startQRTimer = (expiresAt) => {
+            const display = document.getElementById('qr-timer');
+            if (qrTimerInterval) clearInterval(qrTimerInterval);
+
+            qrTimerInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = expiresAt - now;
+
+                if (diff <= 0) {
+                    stopQRSession();
+                    display.innerText = "00:00";
+                    showToast('QR Session Expired', 'error');
+                } else {
+                    const m = Math.floor((diff / 1000 / 60) % 60);
+                    const s = Math.floor((diff / 1000) % 60);
+                    display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        };
+
+        const stopQRSession = () => {
+            if (activeSessionId) { const id = activeSessionId; activeSessionId = null; api('endSession', { sessionId: id }).then(refreshAdminViews); }
+            if (qrTimerInterval) clearInterval(qrTimerInterval);
+            document.getElementById('qr-form-container').classList.remove('hidden');
+            document.getElementById('qr-display-container').classList.add('hidden');
+        };
+
+        /* Data Tables */
+        const buildRecords = () => {
+            const rec = DB.attendance.map(a => ({ ...a, status: 'Present' }));
+            DB.sessions.filter(isEnded).forEach(se => {
+                const here = new Set(DB.attendance.filter(a => a.sessionId === se.sessionId).map(a => a.studentId));
+                DB.students.filter(st => !here.has(st.id)).forEach(st => rec.push({
+                    timestamp: se.startedAt, date: se.date, time: '-', studentId: st.id,
+                    studentName: st.name, subject: se.subject, sessionId: se.sessionId, status: 'Absent'
+                }));
+            });
+            return rec.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+        };
+
+        const renderAttendanceTable = () => {
+            const dateFilter = document.getElementById('filter-date').value;
+            const subjectFilter = document.getElementById('filter-subject').value;
+            const tbody = document.querySelector('#attendance-table tbody');
+            let rows = buildRecords();
+            if (dateFilter) rows = rows.filter(a => a.date === dateFilter);
+            if (subjectFilter !== 'All') rows = rows.filter(a => a.subject === subjectFilter);
+            tbody.innerHTML = rows.length ? rows.map(r => `<tr><td>${r.date}</td><td>${r.time}</td><td>${r.studentId}</td><td>${r.studentName}</td><td>${r.subject}</td><td><span class="badge ${r.status === 'Present' ? 'badge-success' : 'badge-danger'}">${r.status}</span></td></tr>`).join('')
+                : '<tr><td colspan="6" style="text-align:center;">No records found.</td></tr>';
+        };
+
+        const renderReport = () => {
+            const ended = DB.sessions.filter(isEnded);
+            document.querySelector('#student-report-table tbody').innerHTML = DB.students.map(st => {
+                const p = ended.filter(se => DB.attendance.some(a => a.sessionId === se.sessionId && a.studentId === st.id)).length;
+                const pct = ended.length ? Math.round(p / ended.length * 100) : 0;
+                return `<tr><td>${st.id}</td><td>${st.name}</td><td>${ended.length}</td><td>${p}</td><td>${ended.length - p}</td><td>${pct}%</td></tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center;">No students yet.</td></tr>';
+            document.querySelector('#session-report-table tbody').innerHTML = [...DB.sessions].sort((a, b) => Number(b.startedAt) - Number(a.startedAt)).map(se => {
+                const here = new Set(DB.attendance.filter(a => a.sessionId === se.sessionId).map(a => a.studentId));
+                const absent = DB.students.filter(st => !here.has(st.id));
+                const live = !isEnded(se);
+                return `<tr><td>${se.date}</td><td>${se.subject}${live ? ' (live)' : ''}</td><td>${here.size}</td><td>${live ? '-' : absent.length}</td><td>${live ? '-' : (absent.map(a => a.name).join(', ') || 'None')}</td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center;">No sessions yet.</td></tr>';
+        };
+
+        /* Student Management */
+        const toggleAddStudentForm = () => {
+            const form = document.getElementById('add-student-form-container');
+            form.classList.toggle('hidden');
+        };
+
+        document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const student = {
+                id: document.getElementById('stud-id').value.trim(),
+                name: document.getElementById('stud-name').value,
+                email: document.getElementById('stud-email').value,
+                course: document.getElementById('stud-course').value,
+                studentPassword: document.getElementById('stud-password').value
+            };
+            if (!(await api('addStudent', { student }))) return;
+            toggleAddStudentForm();
+            e.target.reset();
+            await refreshAdminViews();
+            showToast('Student added successfully!');
+        });
+
+        const renderStudentsTable = () => {
+            const students = DB.students;
+            const tbody = document.querySelector('#students-table tbody');
+            tbody.innerHTML = '';
+
+            students.forEach(student => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.course}</td>
+                    <td>${student.email}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; width: auto;" onclick="deleteStudent('${student.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        const deleteStudent = async (id) => {
+            if (!confirm('Are you sure you want to delete this student?')) return;
+            if (await api('deleteStudent', { studentId: id })) { await refreshAdminViews(); showToast('Student deleted.'); }
+        };
+
+        const downloadCSV = () => {
+            const attendance = buildRecords();
+            if (attendance.length === 0) {
+                showToast('No data to export', 'error');
+                return;
+            }
+
+            const headers = ['Date', 'Time', 'Student ID', 'Name', 'Subject', 'Status'];
+            const rows = attendance.map(a => [a.date, a.time, a.studentId, `"${a.studentName}"`, `"${a.subject}"`, a.status]);
+
+            const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `attendance_report_${formatDate(new Date())}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        /* === STUDENT FUNCTIONS === */
+
+        let html5QrcodeScanner = null;
+
+        const initStudent = () => {
+            document.getElementById('student-welcome').innerText = `Welcome, ${currentUser.name}`;
+            setupStudentNav();
+            updateStudentDashboard();
+        };
+
+        const setupStudentNav = () => {
+            const items = document.querySelectorAll('#student-sidebar .nav-item');
+            items.forEach(item => {
+                item.addEventListener('click', () => {
+                    const section = item.getAttribute('data-section');
+                    switchStudentNav(section);
+                    document.getElementById('student-sidebar').classList.remove('open');
+                });
+            });
+        };
+
+        const switchStudentNav = (sectionId) => {
+            // Update Active Class
+            document.querySelectorAll('#student-sidebar .nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+
+            // Hide all sections
+            document.getElementById('sec-student-dashboard').classList.add('hidden');
+            document.getElementById('sec-student-scan').classList.add('hidden');
+
+            // Show target
+            document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
+
+            // Handle Camera Lifecycle
+            if (sectionId === 'student-scan') {
+                startScanner();
+            } else {
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear().catch(err => console.error("Failed to clear scanner", err));
+                }
+            }
+
+            // Set Title
+            const titles = {
+                'student-dashboard': 'My Dashboard',
+                'student-scan': 'Scan Attendance QR'
+            };
+            document.getElementById('student-page-title').innerText = titles[sectionId];
+        };
+
+        const updateStudentDashboard = () => {
+            const mine = {};
+            DB.attendance.forEach(a => mine[a.sessionId] = a);
+            const past = DB.sessions.filter(isEnded).sort((a, b) => Number(b.startedAt) - Number(a.startedAt));
+            const present = past.filter(se => mine[se.sessionId]).length;
+            document.getElementById('student-total-attended').innerText = present;
+            document.getElementById('student-total-absent').innerText = past.length - present;
+            const tbody = document.querySelector('#student-history-table tbody');
+            tbody.innerHTML = past.length ? past.slice(0, 10).map(se => {
+                const a = mine[se.sessionId];
+                return `<tr><td>${se.date}</td><td>${a ? a.time : '-'}</td><td>${se.subject}</td><td><span class="badge ${a ? 'badge-success' : 'badge-danger'}">${a ? 'Present' : 'Absent'}</span></td></tr>`;
+            }).join('') : '<tr><td colspan="4" style="text-align:center;">No recent attendance records.</td></tr>';
+        };
+
+        /* Scanner Logic */
+        const startScanner = () => {
+            document.getElementById('reader').classList.remove('hidden');
+            document.getElementById('scan-result').classList.add('hidden');
+
+            // html5-qrcode initialization
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                /* verbose= */ false);
+
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        };
+
+        const onScanSuccess = (decodedText, decodedResult) => {
+            // Stop scanning to prevent multiple triggers
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+            document.getElementById('reader').classList.add('hidden');
+
+            try {
+                const qrData = JSON.parse(decodedText);
+                validateAndMarkAttendance(qrData);
+            } catch (e) {
+                showToast('Invalid QR Code Format', 'error');
+                resetScanner();
+            }
+        };
+
+        const onScanFailure = (error) => {
+            // ignore constant read failures until a code is found
+        };
+
+        const validateAndMarkAttendance = async (qrData) => {
+            if (!qrData.sessionId) { showToast('Unrecognized QR Code', 'error'); resetScanner(); return; }
+            const j = await api('mark', { sessionId: qrData.sessionId });
+            if (!j) { resetScanner(); return; }
+            document.getElementById('scan-result').classList.remove('hidden');
+            if (j.already) {
+                showToast('You have already marked attendance for this session!', 'warning');
+                document.getElementById('scan-details').innerHTML = `Subject: ${j.subject}<br>Status: Already Marked`;
+                return;
+            }
+            showToast('Attendance Marked!');
+            document.getElementById('scan-details').innerHTML = `Subject: <b>${j.subject}</b><br>Time: ${j.time}`;
+            await refresh();
+            updateStudentDashboard();
+        };
+
+        const resetScanner = () => {
+            document.getElementById('scan-result').classList.add('hidden');
+            startScanner();
+        };
+
+        // Run auth check on load
+        window.onload = checkAuth;
+
+    </script>
+</body>
+
+</html>
