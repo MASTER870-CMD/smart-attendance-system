@@ -1095,11 +1095,16 @@
             // Filter unique students present today
             const uniquePresent = new Set(presentTodayList.map(a => a.studentId)).size;
 
+            let absent = DB.sessions.some(x => x.date === today) ? totalStudents - uniquePresent : 0;
+            if (absent < 0) absent = 0;
+            
             document.getElementById('stat-total-students').innerText = totalStudents;
             document.getElementById('stat-present-today').innerText = uniquePresent;
-            document.getElementById('stat-absent-today').innerText = DB.sessions.some(x => x.date === today) ? totalStudents - uniquePresent : 0;
+            document.getElementById('stat-absent-today').innerText = absent;
 
-            const pct = totalStudents === 0 ? 0 : Math.round((uniquePresent / totalStudents) * 100);
+            let pct = totalStudents === 0 ? 0 : Math.round((uniquePresent / totalStudents) * 100);
+            if (pct > 100) pct = 100;
+            
             document.getElementById('stat-attendance-percent').innerText = `${pct}%`;
         };
 
