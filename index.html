@@ -325,6 +325,7 @@
             padding: 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
 
         th {
@@ -430,6 +431,7 @@
                 left: -260px;
                 z-index: 50;
                 height: 100vh;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             }
 
             .sidebar.open {
@@ -446,6 +448,15 @@
 
             .content-area {
                 padding: 1rem;
+            }
+            
+            .login-card {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -1273,7 +1284,11 @@
             // html5-qrcode initialization
             html5QrcodeScanner = new Html5QrcodeScanner(
                 "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    videoConstraints: { facingMode: "environment" }
+                },
                 /* verbose= */ false);
 
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
